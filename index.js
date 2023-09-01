@@ -72,15 +72,18 @@ type restaurant {
   description: String
   dishes:[Dish]
 }
+
+input restaurantInput{
+  id: Int
+  name: String
+  description: String
+}
 type Dish{
   name: String
   price: Int
 }
-input restaurantInput{
-  name: String
-  description: String
-}
 type DeleteResponse{
+  message: String!
   ok: Boolean!
 }
 type Mutation{
@@ -92,20 +95,30 @@ type Mutation{
 // The root provides a resolver function for each API endpoint
 
 var root = {
-  restaurant: (arg) => {
-    // Your code goes here
-  },
-  restaurants: () => {
-    // Your code goes here
-  },
+  restaurant: (arg) => restaurants.find(r => r.id === arg.id),
+  restaurants: () => restaurants,
   setrestaurant: ({ input }) => {
-    // Your code goes here
+    restaurants.push({ id: input.id, name: input.name, description: input.description })
+    return input
   },
   deleterestaurant: ({ id }) => {
-    // Your code goes here
+    let delRes = restaurants.find(r => r.id === id)
+    if (delRes === undefined) {
+      return { ok: false, message: "Could not delete. Restaurant not found" }
+    }
+    restaurants = restaurants.filter(r => r.id !== id)
+    console.log(JSON.stringify(delRes))
+    return { ok: true, message: "Restaurant successfully deleted" }
   },
   editrestaurant: ({ id, ...restaurant }) => {
-    // Your code goes here
+    let edtRes = restaurants.find(r => r.id === id)
+    if (edtRes === undefined) {
+      throw new Error("Could not delete. Restaurant not found")
+    }
+    restaurants[id] = {
+      ...restaurants[id], ...restaurant
+    }
+    return restaurants[id]
   },
 };
 var app = express();
@@ -120,4 +133,4 @@ app.use(
 var port = 5500;
 app.listen(5500, () => console.log("Running Graphql on Port:" + port));
 
-export default root;
+// export default root;
